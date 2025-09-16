@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "ioredis": "^5.4.1",

@@ -5,5 +5,12 @@
     "apps/*",
     "packages/*"
   ],
-  "packageManager": "pnpm@9"
+  "packageManager": "pnpm@9",
+  "scripts": {
+    "build": "pnpm -r build",
+    "start": "pnpm -w --filter sync-api start",
+    "start:api": "pnpm -w --filter sync-api start",
+    "start:worker": "pnpm -w --filter sync-worker start",
+    "start:scheduler": "pnpm -w --filter scheduler start"
+  }
 }
