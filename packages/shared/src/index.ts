@@ -1,7 +1,7 @@
-export * from './config';
-export * from './rpaJane';
-export * from './cspClient';
-export * from './env';
+export * from './config.js';
+export * from './rpaJane.js';
+export * from './cspClient.js';
+export * from './env.js';
 
 export type CommandType = 'convert_existing' | 'book_new' | 'reschedule' | 'cancel';
 
