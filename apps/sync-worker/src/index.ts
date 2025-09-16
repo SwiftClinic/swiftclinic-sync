@@ -1,19 +1,13 @@
 import type { CommandEnvelope, JobStatus } from 'shared';
 import { createJobStoreFromEnv, createRedis, signPayload, nowIso, PostgresJobStore, JaneRPA, CspClient, loadRuntimeConfig } from 'shared';
-import fetch from 'node-fetch';
 
 const cfg = loadRuntimeConfig();
 const jobs = createJobStoreFromEnv();
 const redis = createRedis(process.env.REDIS_URL);
 const queueKey = 'swiftclinic:queue:commands';
-const webhookOutbox = 'swiftclinic:webhook:outbox';
-const webhookDlq = 'swiftclinic:webhook:dlq';
-const webhookUrl = process.env.WEBHOOK_URL; // receiver endpoint
-const webhookSecret = process.env.WEBHOOK_SECRET || 'dev_secret';
 
 async function resumeOrRepairRunningJobs() {
   if (!(jobs instanceof PostgresJobStore)) return;
-  // best-effort: mark stale running jobs as failed with rollback_required (until step checkpoints are implemented)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Client } = require('pg');
   const client = new Client({ connectionString: (jobs as any).url });
@@ -30,7 +24,6 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
 }
 
 async function processAtomicReplace(cmd: CommandEnvelope, job_id: string): Promise<Partial<JobStatus>> {
-  // Preconditions
   if (!cmd.start_iso || !cmd.end_iso || !cmd.patient || !cmd.appointment_type_key) {
     throw new Error('invalid_command');
   }
@@ -77,7 +70,6 @@ async function processAtomicReplace(cmd: CommandEnvelope, job_id: string): Promi
     await withTimeout(rpa.cancelParked(), 5000, 'cancel_original');
     await record('original_canceled');
 
-    // TODO: verification step
     await record('verified');
 
     await record('committed');
@@ -100,12 +92,12 @@ async function processAtomicReplace(cmd: CommandEnvelope, job_id: string): Promi
 
 async function sendWebhook(eventBody: any) {
   const body = JSON.stringify(eventBody);
-  const signature = signPayload(body, webhookSecret);
-  if (!webhookUrl) {
+  const signature = signPayload(body, cfg.webhook.secret);
+  if (!cfg.webhook.url) {
     console.log('WEBHOOK OUT', { body, signature });
     return;
   }
-  await enqueueOutbox({ url: webhookUrl, body, signature, attempt: 0, nextAt: Date.now() });
+  await enqueueOutbox({ url: cfg.webhook.url, body, signature, attempt: 0, nextAt: Date.now() });
 }
 
 async function enqueueOutbox(entry: { url: string; body: string; signature: string; attempt: number; nextAt: number }) {
