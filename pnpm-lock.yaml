@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@types/node':
+        specifier: ^18.19.56
+        version: 18.19.125
 
   apps/scheduler:
     dependencies:

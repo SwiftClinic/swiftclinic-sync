@@ -12,5 +12,8 @@
     "start:api": "pnpm -w --filter sync-api start",
     "start:worker": "pnpm -w --filter sync-worker start",
     "start:scheduler": "pnpm -w --filter scheduler start"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.56"
   }
 }
